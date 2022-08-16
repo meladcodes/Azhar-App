@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Share, Alert } from 'react-native'
 import React from 'react'
 import Feather from "react-native-vector-icons/Feather";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
@@ -6,11 +6,98 @@ import { useState } from 'react';
 import COLORS from '../constants/COLORS';
 import { useNavigation } from '@react-navigation/native';
 import Progress from './Progress';
+import { auth, db } from '../firebase-config';
+import { useEffect } from 'react';
+import { arrayRemove, arrayUnion, collection, doc, onSnapshot, query, updateDoc } from 'firebase/firestore';
 
 
-const Dua = ({name, location, duaImg,  likes, comments, duaText, profileImg, duaUser, duaProgress}) => {
+const Dua = ({duaID, name, username, duaImg, likedBy, duaText, profileImg, duaUser, duaProgress}) => {
   const navigation = useNavigation();
+  const user = auth.currentUser;
   const [liked, setLiked] = useState(false);
+  const [comments, setComments] = useState();
+
+  //Check if a dua is liked by current user
+  useEffect(() => {
+    likedBy.map((liker) => {
+      if(liker === user?.displayName) {
+        setLiked(true)
+      } else {
+        setLiked(false)
+      }
+    })
+  }, [likedBy])
+  
+  
+
+  const onLike = async () => {
+    //If dua is not liked by current user
+    if(liked === false) {
+      //add the current users name onto the likedBy array field
+      await updateDoc(doc(db, "duas", duaID), {
+        likedBy: arrayUnion(user.displayName),
+        //Increase the dua progression by 1;
+        duaProgress: {
+          currentProgress: duaProgress.currentProgress + 1,
+          totalProgress: duaProgress.totalProgress,
+        },
+      })
+      setLiked(true)
+      //If dua is liked by current user
+    } else {
+      await updateDoc(doc(db, "duas", duaID), {
+        likedBy: arrayRemove(user.displayName),
+        //Increase the dua progression by 1;
+        duaProgress: {
+          currentProgress: duaProgress.currentProgress - 1,
+          totalProgress: duaProgress.totalProgress,
+        }
+      })
+      setLiked(false)
+    }
+      
+  }
+
+  //Check the amount of likes
+  useEffect(() => {
+    const q = query(collection(db, "comments"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        //check if duaId is same as the comment duaId then set
+          setComments(querySnapshot.docs.filter((comment) => comment.data().duaID === duaID))
+    });
+    return unsubscribe;
+    }, [duaID])
+
+    const checkPost = () => {
+      if(name === user.displayName) {
+        navigation.navigate("MyProfileScreen")
+      } else {
+        navigation.navigate("OtherProfileScreen", {duaUser})
+      }
+    }
+
+    const onShare = async () => {
+      try {
+        const result = await Share.share({
+          message: duaText,
+          url: duaImg,
+          title: name,
+          tintColor: COLORS.primary,
+        });
+        if (result.action === Share.sharedAction) {
+          if (result.activityType) {
+            // shared with activity type of result.activityType
+          } else {
+            // shared
+            Alert.alert("Sucessfully Shared")
+          }
+        } else if (result.action === Share.dismissedAction) {
+          // dismissed
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    };
 
   return (
     <View style={styles.duaContainer}>
@@ -18,12 +105,12 @@ const Dua = ({name, location, duaImg,  likes, comments, duaText, profileImg, dua
       <View style={styles.duaHeader}>
         <View style={styles.leftSide}>
 
-            <TouchableOpacity onPress={() => navigation.navigate("OtherProfileScreen", {duaUser})} style={styles.profileContainer}>
+            <TouchableOpacity onPress={() => checkPost()} style={styles.profileContainer}>
                 <Image style={styles.profileImg} source={{uri: profileImg}}/>
             </TouchableOpacity>
             <View style={styles.profileTextContainer}>
                 <Text style={styles.duaName}>{name}</Text>            
-                <Text style={styles.duaLocation}>{location}</Text>            
+                <Text style={styles.duaUsername}>@{username}</Text>            
             </View>
         </View>
 
@@ -46,15 +133,15 @@ const Dua = ({name, location, duaImg,  likes, comments, duaText, profileImg, dua
       <View style={styles.statsContainer}>
 
         <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={() => setLiked(!liked)} style={styles.icons}>
+        <TouchableOpacity onPress={() => onLike()} style={styles.icons}>
             {
               liked ? <FontAwesome name="heart" color={COLORS.primary} size={24} /> : <Feather name="heart" size={24} color="black"/> 
             }
           </TouchableOpacity>
-          <TouchableOpacity style={styles.icons}>
+          <TouchableOpacity onPress={() => navigation.navigate("CommentsScreen", {duaID, duaProgress})} style={styles.icons}>
             <Feather name="message-circle" size={24} color="black"/>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.icons}>
+          <TouchableOpacity onPress={() => onShare()} style={styles.icons}>
             <Feather name="send" size={24} color="black"/>
           </TouchableOpacity>
         </View>
@@ -63,13 +150,13 @@ const Dua = ({name, location, duaImg,  likes, comments, duaText, profileImg, dua
 
         <View style={{flexDirection: "row",marginTop: 5, marginBottom: 5,}}>
           <TouchableOpacity style={{flexDirection: "row"}}>
-            <Text style={{color: "black", fontWeight: "500", marginRight: 5,}}>{likes}</Text>
+            <Text style={{color: "black", fontWeight: "500", marginRight: 5,}}>{likedBy.length}</Text>
             <Text style={{color: "black"}}>Likes</Text>
           </TouchableOpacity>  
             <Text style={{color: "grey"}}> • </Text>
           <TouchableOpacity style={{flexDirection: "row"}}>  
-            <Text style={{color: "black", fontWeight: "500", marginRight: 5}}>{comments}</Text>
-            <Text style={{color: "black"}}>Comments</Text>
+            <Text style={{color: "black", fontWeight: "500", marginRight: 5}}>{comments?.length}</Text>
+            <Text style={{color: "black"}}>Comments</Text>  
           </TouchableOpacity>
 
         </View>
@@ -77,6 +164,7 @@ const Dua = ({name, location, duaImg,  likes, comments, duaText, profileImg, dua
           
         </View>  
 
+        
     </View>
   )
 }
@@ -128,7 +216,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "600"
       },
-      duaLocation: {
+      duaUsername: {
         color: COLORS.black,
         fontSize: 13,
       },

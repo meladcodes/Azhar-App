@@ -6,6 +6,8 @@ import Dua from '../components/Dua';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../firebase-config';
 
+
+
 const HomeScreen = () => {
   const [duas, setDuas] = useState();
 
@@ -14,6 +16,7 @@ const HomeScreen = () => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
     setDuas(querySnapshot.docs)
   });
+  return unsubscribe;
   }, [])
 
 
@@ -32,20 +35,24 @@ const HomeScreen = () => {
         postText={item.postText}/>}
         /> */}
         {duas?.map((item) => {
-          const { duaInput, duaUser, duaImage, duaProgress} = item.data();
+          const { duaInput, duaUser, duaImage, duaProgress, likedBy, } = item.data();
            return (
             <Dua name={duaUser.name}
-            location={duaUser.username}
+            username={duaUser.username}
             duaText={duaInput}
             key={item.id}
             duaImg={duaImage}
             profileImg={duaUser.profilePicture}
             duaUser={duaUser}
             duaProgress={duaProgress}
+            likedBy={likedBy}
+            duaID={item.id}
             />
           )
         })}
        </ScrollView> 
+
+       
 
     </SafeAreaView>
   )
@@ -57,6 +64,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bg,
+    
   },
   duaContainer: {
     paddingHorizontal: 20,

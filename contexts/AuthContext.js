@@ -11,6 +11,8 @@ export const AuthContextProvider = ({children}) => {
     const [currentDbUser, setCurrentDbUser] = useState();
     const [currDbDocument, setCurrDbDocument] = useState();
     const [currUser, setCurrUser] = useState();
+
+
     onAuthStateChanged(auth, (user) => {
         setCurrUser(user);
     })
@@ -34,15 +36,11 @@ export const AuthContextProvider = ({children}) => {
             console.log(error)
         }
     }
-    useEffect(() => {
-        getCurrDbUser()
-    }, [])
     
     useEffect(() => {
         getCurrDbUser()
     }, [currUser])
 
-    
     
     return (
         <AuthContext.Provider value={{currentDbUser, currDbDocument}}>

@@ -68,6 +68,7 @@ const CreateProfileScreen = ({navigation}) => {
             email: user.email,
             id: user.uid,
             photoURL: image,
+            Hasanat: 0,
           });
           if(image !== null) {
             const fileRef = ref(storage, `profilePictures/${docRef?.id}`);

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Keyboard, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React from 'react'
 import Feather from "react-native-vector-icons/Feather";
 import COLORS from '../constants/COLORS';
@@ -24,6 +24,7 @@ const Header = ({name}) => {
 
 
   return (
+    <TouchableWithoutFeedback onPress={(Keyboard.dismiss)}>
     <View style={styles.header}>
 
           <Text style={styles.logo}>{name}</Text>
@@ -39,6 +40,7 @@ const Header = ({name}) => {
         </View>
  
       </View>
+      </TouchableWithoutFeedback>
   )
 }
 
@@ -49,8 +51,8 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         marginHorizontal: 20,
-        marginBottom: 20,
-        marginTop: 10,
+        marginBottom: 10,
+        marginTop: 20,
       },
       iconContainer: {
         flexDirection: "row",

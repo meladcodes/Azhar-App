@@ -24,17 +24,17 @@ const MyProfileScreen = () => {
 
       <View style={styles.statContainer}>
         <TouchableOpacity style={styles.stat}>
-          <Text style={styles.stateName}>LIKES</Text>  
+          <Text style={styles.stateName}>Rank</Text>  
           <Text style={styles.stateNum}>300K</Text>  
         </TouchableOpacity>  
 
         <TouchableOpacity style={styles.stat}>
-          <Text style={styles.stateName}>Following</Text>  
+          <Text style={styles.stateName}>Hasanat</Text>  
           <Text style={styles.stateNum}>1200</Text>  
         </TouchableOpacity>  
 
         <TouchableOpacity style={styles.stat}>
-          <Text style={styles.stateName}>Followers</Text>  
+          <Text style={styles.stateName}>Likes</Text>  
           <Text style={styles.stateNum}>1M</Text>  
         </TouchableOpacity>  
       </View> 

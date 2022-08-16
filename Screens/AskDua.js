@@ -1,9 +1,9 @@
-import { Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { Alert, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import COLORS from '../constants/COLORS';
 import Feather from "react-native-vector-icons/Feather";
 import * as ImagePicker from "expo-image-picker";
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { auth, db } from '../firebase-config';
 import { ref, uploadBytes, getStorage, getDownloadURL } from 'firebase/storage';
@@ -15,6 +15,7 @@ const AskDua = ({navigation}) => {
   const [duaInput, setDuaInput] = useState();
   const {currentDbUser} = useAuth();
   const user = auth.currentUser;
+  const [progressTarget, setProgressTarget] = useState();
 
   const storage = getStorage();
 
@@ -55,6 +56,11 @@ const AskDua = ({navigation}) => {
         const docRef = await addDoc(collection(db, "duas"), {
           duaInput: duaInput,
           duaUser: currentDbUser,
+          duaProgress: {
+            currentProgress: 0,
+            totalProgress: progressTarget
+          },
+          likedBy: arrayUnion()
         });
         //Upload the dua picture to storage
       if(image !== null) {
@@ -70,6 +76,8 @@ const AskDua = ({navigation}) => {
       }
       navigation.navigate("HomeScreen");
       setDuaInput(null)
+      setImage(null)
+      setProgressTarget(null);
       } else {
         console.warn("The DB user hasnt synced yet!")
       }
@@ -78,6 +86,13 @@ const AskDua = ({navigation}) => {
       console.log(error)
     }
   }
+
+  const selectTarget = () => {
+    const target = Alert.prompt("How many duas do u want to reach? ");
+    setProgressTarget(target);
+  }
+
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -109,6 +124,7 @@ const AskDua = ({navigation}) => {
       </TouchableOpacity>
     </View>
     
+    <TextInput keyboardType='numeric' value={progressTarget} onChangeText={(e) => setProgressTarget(e)} placeholder="What is your dua target?"  placeholderTextColor="white" style={styles.targetInput} />
 
 
     <TouchableOpacity onPress={() => askNewDua()} style={styles.publishBtn}>
@@ -151,6 +167,18 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: "300",
     minWidth: "90%",
+  },
+  targetInput: {
+    fontSize: 18,
+    marginHorizontal: 22,
+    color: COLORS.white,
+    marginBottom: 15,
+    fontWeight: "300",
+    minWidth: "90%",
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    padding: 8,
+    borderRadius: 10,
   },
   publishBtn: {
     backgroundColor: COLORS.primary,
