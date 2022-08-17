@@ -14,7 +14,7 @@ const CommentsScreen = ({route}) => {
 
     const [comments, setComments] = useState();
     //Getting the duaIDs from the dua components in order to check if the comments belong to the dua or not.
-    const {duaID, duaProgress} = route.params;
+    const {duaID, duaCompleted} = route.params;
     
     useEffect(() => {
     const q = query(collection(db, "comments"));
@@ -31,7 +31,8 @@ const CommentsScreen = ({route}) => {
         <SafeAreaView style={styles.container}>
             
             <Header name="Comments"/>
-            <CreateComment duaID={duaID} duaProgress={duaProgress}/>
+            {duaCompleted == true ? null : <CreateComment duaID={duaID} duaProgress={duaProgress}/>}
+            
                 <FlatList 
                 style={{marginHorizontal: 20}}
                 data={comments}

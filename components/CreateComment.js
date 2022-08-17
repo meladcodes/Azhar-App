@@ -14,6 +14,7 @@ const CreateComment = ({duaID, duaProgress}) => {
   const {currDbDocument} = useAuth();
 
     const [commentContent, setCommentContent] = useState();
+    
     const createComment = async () => {
     
       const docRef = await addDoc(collection(db, "comments"), {

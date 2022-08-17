@@ -16,6 +16,7 @@ const Dua = ({duaID, name, username, duaImg, likedBy, duaText, profileImg, duaUs
   const user = auth.currentUser;
   const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState();
+  const [duaCompleted, setDuaCompleted] = useState();
 
   //Check if a dua is liked by current user
   useEffect(() => {
@@ -57,6 +58,7 @@ const Dua = ({duaID, name, username, duaImg, likedBy, duaText, profileImg, duaUs
     }
       
   }
+  
 
   //Check the amount of likes
   useEffect(() => {
@@ -99,6 +101,32 @@ const Dua = ({duaID, name, username, duaImg, likedBy, duaText, profileImg, duaUs
       }
     };
 
+    const completeCheck = async () => {
+      if(duaProgress.currentProgress == duaProgress.totalProgress) {
+        await updateDoc(doc(db, "duas", duaID), {
+          duaProgress: {
+            currentProgress: duaProgress.currentProgress,
+            totalProgress: duaProgress.totalProgress,
+            completed: true,
+          }
+        })
+        setDuaCompleted(true);
+      } else {
+        await updateDoc(doc(db, "duas", duaID), {
+          duaProgress: {
+            currentProgress: duaProgress.currentProgress,
+            totalProgress: duaProgress.totalProgress,
+            completed: false,
+          }
+        })
+        setDuaCompleted(false);
+      }
+    }
+
+    useEffect(() => {
+      completeCheck();
+    }, [duaProgress])
+
   return (
     <View style={styles.duaContainer}>
 
@@ -133,20 +161,24 @@ const Dua = ({duaID, name, username, duaImg, likedBy, duaText, profileImg, duaUs
       <View style={styles.statsContainer}>
 
         <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={() => onLike()} style={styles.icons}>
-            {
-              liked ? <FontAwesome name="heart" color={COLORS.primary} size={24} /> : <Feather name="heart" size={24} color="black"/> 
-            }
+        {duaCompleted ? <Feather name="heart" size={24} color="grey" style={{marginRight: 15}}/> : 
+          <TouchableOpacity onPress={() => onLike()} style={styles.icons}>
+              {
+                liked ? <FontAwesome name="heart" color={COLORS.primary} size={24} /> : <Feather name="heart" size={24} color="black"/> 
+              }
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("CommentsScreen", {duaID, duaProgress})} style={styles.icons}>
+        }
+          {duaCompleted ? <TouchableOpacity onPress={() => navigation.navigate("CommentsScreen", {duaID, duaCompleted})} style={styles.icons}>
+            <Feather name="message-circle" size={24} color="grey"/>
+          </TouchableOpacity> : <TouchableOpacity onPress={() => navigation.navigate("CommentsScreen", {duaID, duaProgress})} style={styles.icons}>
             <Feather name="message-circle" size={24} color="black"/>
-          </TouchableOpacity>
+          </TouchableOpacity>} 
           <TouchableOpacity onPress={() => onShare()} style={styles.icons}>
             <Feather name="send" size={24} color="black"/>
           </TouchableOpacity>
         </View>
 
-        <Progress currentProgress={duaProgress.currentProgress} totalProgress={duaProgress.totalProgress} height={20}/>
+        <Progress duaCompleted={duaCompleted} currentProgress={duaProgress.currentProgress} totalProgress={duaProgress.totalProgress} height={20}/>
 
         <View style={{flexDirection: "row",marginTop: 5, marginBottom: 5,}}>
           <TouchableOpacity style={{flexDirection: "row"}}>
